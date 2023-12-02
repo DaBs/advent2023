@@ -1,10 +1,15 @@
 use nom::{
     bytes::complete::tag,
-
     character::complete::{digit1, line_ending},
     branch::alt,
-    sequence::{tuple, terminated, pair}, combinator::opt, multi::many0,
+    sequence::tuple, 
+    combinator::opt, 
+    multi::{many0, separated_list1},
 };
+
+const MAX_RED_CUBES: i32 = 12;
+const MAX_GREEN_CUBES: i32 = 13;
+const MAX_BLUE_CUBES: i32 = 14;
 
 // A game could look like this:
 // Game 1: 5 red, 3 green, 2 blue; 2 blue, 13 red, 7 green; 5 green, 11 blue, 2 red
@@ -20,22 +25,22 @@ struct GameRound {
 
 impl GameRound {
     fn parse(input: &str) -> nom::IResult<&str, GameRound> {
-        // U
-        let color_tag = tuple((digit1, alt((
+        // Let us match e.g. "5 red, " and "5 red"
+        let cube_tag = tuple((digit1, alt((
             tag(" red"),
             tag(" green"),
             tag(" blue"),
         )), opt(tag(", "))));
 
-        // Colors can be in any order, and there can be between 0 and 1 of each color
-       let mut match_colors = many0(color_tag);
+        // Colors can be in any order, and there can be between 0 and 1 of each color, so use many0 to match 0 or more colors
+       let mut match_cubes = many0(cube_tag);
 
-       let (remaining_input, colors) = match_colors(input)?;
+       let (remaining_input, cubes) = match_cubes(input)?;
        let mut red_cubes = 0;
        let mut green_cubes = 0;
        let mut blue_cubes = 0;
 
-         for (number, color, _) in colors {
+         for (number, color, _) in cubes {
             match color {
                 " red" => red_cubes = number.parse().unwrap(),
                 " green" => green_cubes = number.parse().unwrap(),
@@ -62,20 +67,16 @@ struct Game {
 
 impl Game {
     fn parse(input: &str) -> nom::IResult<&str, Game> {
-        let (input, _) = nom::bytes::complete::tag("Game ")(input)?;
-        let (input, id) = nom::character::complete::digit1(input)?;
-        let (input, _) = nom::bytes::complete::tag(": ")(input)?;
-        let (remaining_input, rounds) = nom::multi::separated_list1(nom::bytes::complete::tag("; "), GameRound::parse)(input)?;
+        let (input, _) = tag("Game ")(input)?;
+        let (input, id) = digit1(input)?;
+        let (input, _) = tag(": ")(input)?;
+        let (remaining_input, rounds) = separated_list1(tag("; "), GameRound::parse)(input)?;
         Ok((remaining_input, Game {
             id: id.parse().unwrap(),
             rounds,
         }))
     }
 }
-
-const MAX_RED_CUBES: i32 = 12;
-const MAX_GREEN_CUBES: i32 = 13;
-const MAX_BLUE_CUBES: i32 = 14;
 
 fn main() {
     let input = include_str!("input.txt");
@@ -107,13 +108,13 @@ fn main() {
         let mut blue_cubes = 0;
 
         for round in &game.rounds {
-            if (round.red_cubes > red_cubes) {
+            if round.red_cubes > red_cubes {
                 red_cubes = round.red_cubes;
             }
-            if (round.green_cubes > green_cubes) {
+            if round.green_cubes > green_cubes {
                 green_cubes = round.green_cubes;
             }
-            if (round.blue_cubes > blue_cubes) {
+            if round.blue_cubes > blue_cubes {
                 blue_cubes = round.blue_cubes;
             }
         }
