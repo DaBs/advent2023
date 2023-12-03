@@ -1,5 +1,5 @@
 use regex::Regex;
-use rstar::{AABB, RTree, RTreeObject, PointDistance};
+use rstar::{AABB, RTree, RTreeObject};
 
 #[derive(Debug, Clone)]
 struct EnginePart {
@@ -18,10 +18,6 @@ impl EnginePart {
 
     fn is_gear(&self) -> bool {
         self.contents == "*"
-    }
-
-    fn expanded_envelope(&self) -> <EnginePart as RTreeObject>::Envelope {
-        AABB::from_corners([self.x - 1, self.y - 1], [self.x + self.width + 1, self.y + self.height + 1])
     }
 }
 
@@ -42,7 +38,7 @@ fn part1(engine_parts: &Vec<EnginePart>, rtree: &RTree<EnginePart>) -> i32 {
                 // Get all intersecting engine parts
                 let intersecting_engine_parts = rtree.locate_in_envelope_intersecting(&engine_part.envelope()).collect::<Vec<_>>();
                 // Filter intersecting to check if any are symbols
-                let intersecting_symbols = intersecting_engine_parts.iter().filter(|part| !part.is_number).collect::<Vec<_>>();
+                let intersecting_symbols = intersecting_engine_parts.iter().filter(|part| part.is_symbol()).collect::<Vec<_>>();
                 // If there are symbols, then we have a number
                 if intersecting_symbols.len() > 0 {
                     sum += engine_part.contents.parse::<i32>().unwrap();
@@ -85,6 +81,7 @@ fn main() {
     let mut engine_parts = Vec::new();
     let mut y: i32 = 0;
 
+    // Parse the input into a vector of EngineParts
     for line in lines {
         for capture in line_regex.captures_iter(line) {
             let x = capture.get(0).unwrap().start() as i32;
@@ -105,8 +102,10 @@ fn main() {
         y += 1;
     }
 
+    // Clone the vector of engine parts so we can use it for the RTree
     let cloned_engine_parts = engine_parts.clone();
 
+    // Create RTree to make searching for intersecting parts easier
     let rtree = RTree::bulk_load(cloned_engine_parts);
     
     let part1_sum = part1(&engine_parts, &rtree);
