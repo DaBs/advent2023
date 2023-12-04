@@ -6,20 +6,53 @@ struct Card {
     draw_numbers: Vec<i32>,
 }
 
+impl Card {
+    fn get_matches(&self) -> usize {
+        let winning_numbers = &self.winning_numbers;
+        let draw_numbers = &self.draw_numbers;
+
+        let mut matches: usize = 0;
+
+        for winning_number in winning_numbers {
+            if draw_numbers.contains(winning_number) {
+                matches += 1;
+            }
+        }
+
+        matches
+    }
+
+    fn get_sum(&self) -> i32 {
+        let matches = self.get_matches();
+
+        let mut card_sum = 1;
+
+        for _ in 1..matches {
+            card_sum *= 2;
+        }
+
+        card_sum
+    }
+}
 
 fn parse_line_to_card(line: &str) -> Card {
+    // Split the line into the card number part and the winning/draw numbers part
     let parts = line.split(":").collect::<Vec<_>>();
 
+    // Parse the card number
     let number = parts[0].split(" ").last().unwrap().parse::<i32>().unwrap();
 
+    // Split the winning/draw numbers part into the winning numbers and draw numbers
     let number_parts: Vec<_> = parts[1].split("|").collect();
 
+    // Parse the winning numbers
     let winning_numbers = number_parts[0]
         .split(" ")
         .filter(|s| s.len() > 0)
         .map(|s| s.parse::<i32>().unwrap())
         .collect::<Vec<_>>();
 
+    // Parse the draw numbers
     let draw_numbers = number_parts[1]
         .split(" ")
         .filter(|s| s.len() > 0)
@@ -46,41 +79,12 @@ fn load_parse_input() -> Vec<Card> {
     cards
 }
 
-fn get_card_matches(card: &Card) -> usize {
-    let winning_numbers = &card.winning_numbers;
-    let draw_numbers = &card.draw_numbers;
-
-    let mut matches: usize = 0;
-
-    for winning_number in winning_numbers {
-        if draw_numbers.contains(winning_number) {
-            matches += 1;
-        }
-    }
-
-    matches
-}
-
-fn get_card_sum(card: &Card) -> i32 {
-    let matches = get_card_matches(card);
-
-    let mut card_sum = 1;
-
-    for _ in 1..matches {
-        card_sum *= 2;
-    }
-
-    card_sum
-}
-
 fn part1(cards: &Vec<Card>) -> i32 {
-    let cards = load_parse_input();
-
     let mut part1_sum = 0;
 
     for card in cards.iter() {
 
-        let card_sum = get_card_sum(card);
+        let card_sum = card.get_sum();
 
         part1_sum += card_sum;
     }
@@ -92,15 +96,12 @@ fn part2(cards: &Vec<Card>) -> i32 {
     let mut card_copies_map: HashMap<usize, i32> = HashMap::new();
 
     for (pos, card) in cards.iter().enumerate() {
-        let matches = get_card_matches(card);
-
-        println!("Card {} has {} matches", card.number, matches);
+        let matches = card.get_matches();
 
         let copies = card_copies_map.get(&pos).cloned().unwrap_or(1);
 
         for i in (pos + 1)..(pos + 1 + matches) {
             let index = i as usize;
-            println!("Card {} has {} copies", card.number, copies);
             let existing_copies = card_copies_map.get(&index).cloned().unwrap_or(1);
             let new_copies = existing_copies + copies;
             card_copies_map.insert(index, new_copies);
@@ -144,7 +145,7 @@ mod tests {
     fn test_get_card_matches() {
         let line = "Card  17: 66 49 60 87  9 35 86 80 40 26 | 48  1 82 34 53 78 30  4 86 22 97 26 54  2 49 88 23 94 13 90 32 98 38 51 25";
         let card = parse_line_to_card(line);
-        let matches = get_card_matches(&card);
+        let matches = card.get_matches();
         assert_eq!(matches, 3);
     }
 
@@ -152,7 +153,7 @@ mod tests {
     fn test_get_card_sum() {
         let line = "Card  17: 66 49 60 87  9 35 86 80 40 26 | 48  1 82 34 53 78 30  4 86 22 97 26 54  2 49 88 23 94 13 90 32 98 38 51 25";
         let card = parse_line_to_card(line);
-        let card_sum = get_card_sum(&card);
+        let card_sum = card.get_sum();
         assert_eq!(card_sum, 4);
     }
 
