@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::convert::TryFrom;
 
 struct Card {
     number: i32,
@@ -35,36 +36,47 @@ impl Card {
     }
 }
 
-impl From<&str> for Card {
-    fn from(line: &str) -> Self {
+
+impl TryFrom<&str> for Card {
+    type Error = &'static str;
+
+    fn try_from(line: &str) -> Result<Self, Self::Error> {
         // Split the line into the card number part and the winning/draw numbers part
-        let parts = line.split(":").collect::<Vec<_>>();
+        let parts: Vec<&str> = line.split(":").collect();
+        if parts.len() != 2 {
+            return Err("Invalid line format");
+        }
 
         // Parse the card number
-        let number = parts[0].split(" ").last().unwrap().parse::<i32>().unwrap();
+        let number = parts[0].split(" ").last().ok_or("Invalid card number")?.parse::<i32>().map_err(|_| "Invalid card number")?;
 
         // Split the winning/draw numbers part into the winning numbers and draw numbers
-        let number_parts: Vec<_> = parts[1].split("|").collect();
+        let number_parts: Vec<&str> = parts[1].split("|").collect();
+        if number_parts.len() != 2 {
+            return Err("Invalid winning/draw numbers format");
+        }
 
         // Parse the winning numbers
-        let winning_numbers = number_parts[0]
+        let winning_numbers: Result<Vec<i32>, _> = number_parts[0]
             .split(" ")
-            .filter(|s| s.len() > 0)
-            .map(|s| s.parse::<i32>().unwrap())
-            .collect::<Vec<_>>();
+            .filter(|s| !s.is_empty())
+            .map(|s| s.parse::<i32>())
+            .collect();
+        let winning_numbers = winning_numbers.map_err(|_| "Invalid winning numbers")?;
 
         // Parse the draw numbers
-        let draw_numbers = number_parts[1]
+        let draw_numbers: Result<Vec<i32>, _> = number_parts[1]
             .split(" ")
-            .filter(|s| s.len() > 0)
-            .map(|s| s.parse::<i32>().unwrap())
-            .collect::<Vec<_>>();
+            .filter(|s| !s.is_empty())
+            .map(|s| s.parse::<i32>())
+            .collect();
+        let draw_numbers = draw_numbers.map_err(|_| "Invalid draw numbers")?;
 
-        Card {
+        Ok(Card {
             number,
             winning_numbers,
             draw_numbers,
-        }
+        })
     }
 }
 
@@ -75,7 +87,7 @@ fn load_parse_input() -> Vec<Card> {
     let mut cards = Vec::new();
 
     for line in lines {
-        let card = Card::from(line);
+        let card = Card::try_from(line).unwrap();
         cards.push(card);
     }
 
@@ -138,7 +150,7 @@ mod tests {
     #[test]
     fn test_parse_line_to_card() {
         let line = "Card  17: 66 49 60 87  9 35 86 80 40 26 | 48  1 82 34 53 78 30  4 86 22 97 26 54  2 49 88 23 94 13 90 32 98 38 51 25";
-        let card = Card::from(line);
+        let card = Card::try_from(line).unwrap();
         assert_eq!(card.number, 17);
         assert_eq!(card.winning_numbers, vec![66, 49, 60, 87, 9, 35, 86, 80, 40, 26]);
         assert_eq!(card.draw_numbers, vec![48, 1, 82, 34, 53, 78, 30, 4, 86, 22, 97, 26, 54, 2, 49, 88, 23, 94, 13, 90, 32, 98, 38, 51, 25]);
@@ -147,7 +159,7 @@ mod tests {
     #[test]
     fn test_get_card_matches() {
         let line = "Card  17: 66 49 60 87  9 35 86 80 40 26 | 48  1 82 34 53 78 30  4 86 22 97 26 54  2 49 88 23 94 13 90 32 98 38 51 25";
-        let card = Card::from(line);
+        let card = Card::try_from(line).unwrap();
         let matches = card.get_matches();
         assert_eq!(matches, 3);
     }
@@ -155,7 +167,7 @@ mod tests {
     #[test]
     fn test_get_card_sum() {
         let line = "Card  17: 66 49 60 87  9 35 86 80 40 26 | 48  1 82 34 53 78 30  4 86 22 97 26 54  2 49 88 23 94 13 90 32 98 38 51 25";
-        let card = Card::from(line);
+        let card = Card::try_from(line).unwrap();
         let card_sum = card.get_sum();
         assert_eq!(card_sum, 4);
     }
