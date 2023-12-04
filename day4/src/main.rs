@@ -35,34 +35,36 @@ impl Card {
     }
 }
 
-fn parse_line_to_card(line: &str) -> Card {
-    // Split the line into the card number part and the winning/draw numbers part
-    let parts = line.split(":").collect::<Vec<_>>();
+impl From<&str> for Card {
+    fn from(line: &str) -> Self {
+        // Split the line into the card number part and the winning/draw numbers part
+        let parts = line.split(":").collect::<Vec<_>>();
 
-    // Parse the card number
-    let number = parts[0].split(" ").last().unwrap().parse::<i32>().unwrap();
+        // Parse the card number
+        let number = parts[0].split(" ").last().unwrap().parse::<i32>().unwrap();
 
-    // Split the winning/draw numbers part into the winning numbers and draw numbers
-    let number_parts: Vec<_> = parts[1].split("|").collect();
+        // Split the winning/draw numbers part into the winning numbers and draw numbers
+        let number_parts: Vec<_> = parts[1].split("|").collect();
 
-    // Parse the winning numbers
-    let winning_numbers = number_parts[0]
-        .split(" ")
-        .filter(|s| s.len() > 0)
-        .map(|s| s.parse::<i32>().unwrap())
-        .collect::<Vec<_>>();
+        // Parse the winning numbers
+        let winning_numbers = number_parts[0]
+            .split(" ")
+            .filter(|s| s.len() > 0)
+            .map(|s| s.parse::<i32>().unwrap())
+            .collect::<Vec<_>>();
 
-    // Parse the draw numbers
-    let draw_numbers = number_parts[1]
-        .split(" ")
-        .filter(|s| s.len() > 0)
-        .map(|s| s.parse::<i32>().unwrap())
-        .collect::<Vec<_>>();
+        // Parse the draw numbers
+        let draw_numbers = number_parts[1]
+            .split(" ")
+            .filter(|s| s.len() > 0)
+            .map(|s| s.parse::<i32>().unwrap())
+            .collect::<Vec<_>>();
 
-    Card {
-        number,
-        winning_numbers,
-        draw_numbers,
+        Card {
+            number,
+            winning_numbers,
+            draw_numbers,
+        }
     }
 }
 
@@ -73,7 +75,8 @@ fn load_parse_input() -> Vec<Card> {
     let mut cards = Vec::new();
 
     for line in lines {
-        cards.push(parse_line_to_card(line));
+        let card = Card::from(line);
+        cards.push(card);
     }
 
     cards
@@ -135,7 +138,7 @@ mod tests {
     #[test]
     fn test_parse_line_to_card() {
         let line = "Card  17: 66 49 60 87  9 35 86 80 40 26 | 48  1 82 34 53 78 30  4 86 22 97 26 54  2 49 88 23 94 13 90 32 98 38 51 25";
-        let card = parse_line_to_card(line);
+        let card = Card::from(line);
         assert_eq!(card.number, 17);
         assert_eq!(card.winning_numbers, vec![66, 49, 60, 87, 9, 35, 86, 80, 40, 26]);
         assert_eq!(card.draw_numbers, vec![48, 1, 82, 34, 53, 78, 30, 4, 86, 22, 97, 26, 54, 2, 49, 88, 23, 94, 13, 90, 32, 98, 38, 51, 25]);
@@ -144,7 +147,7 @@ mod tests {
     #[test]
     fn test_get_card_matches() {
         let line = "Card  17: 66 49 60 87  9 35 86 80 40 26 | 48  1 82 34 53 78 30  4 86 22 97 26 54  2 49 88 23 94 13 90 32 98 38 51 25";
-        let card = parse_line_to_card(line);
+        let card = Card::from(line);
         let matches = card.get_matches();
         assert_eq!(matches, 3);
     }
@@ -152,7 +155,7 @@ mod tests {
     #[test]
     fn test_get_card_sum() {
         let line = "Card  17: 66 49 60 87  9 35 86 80 40 26 | 48  1 82 34 53 78 30  4 86 22 97 26 54  2 49 88 23 94 13 90 32 98 38 51 25";
-        let card = parse_line_to_card(line);
+        let card = Card::from(line);
         let card_sum = card.get_sum();
         assert_eq!(card_sum, 4);
     }
