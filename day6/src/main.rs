@@ -6,11 +6,11 @@ struct Race {
 }
 
 fn get_boat_distance_travelled_with_hold_time(hold_time: u64, total_time: u64) -> u64 {
-    if (hold_time >= total_time) {
+    if hold_time >= total_time {
         return 0;
     }
 
-    if (hold_time == 0) {
+    if hold_time == 0 {
         return 0;
     }
 
@@ -27,12 +27,12 @@ fn simulate_race_winning_conditions(race: &Race) -> Vec<u64> {
     let mut current_button_hold_time = 1;
 
     // First find the max button hold time that will allow the boat to beat the record
-    while (get_boat_distance_travelled_with_hold_time(current_button_hold_time, race.time) < race.max_distance) {
+    while get_boat_distance_travelled_with_hold_time(current_button_hold_time, race.time) < race.max_distance {
         current_button_hold_time += 1;
     }
 
     // Now find all the button hold times that will allow the boat to beat the record
-    while (get_boat_distance_travelled_with_hold_time(current_button_hold_time, race.time) > race.max_distance) {
+    while get_boat_distance_travelled_with_hold_time(current_button_hold_time, race.time) > race.max_distance {
         valid_button_hold_times.push(current_button_hold_time);
         current_button_hold_time += 1;
     }
