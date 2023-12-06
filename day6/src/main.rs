@@ -1,11 +1,11 @@
 use regex::Regex;
 
 struct Race {
-    time: u128,
-    max_distance: u128,
+    time: u64,
+    max_distance: u64,
 }
 
-fn get_boat_distance_travelled_with_hold_time(hold_time: u128, total_time: u128) -> u128 {
+fn get_boat_distance_travelled_with_hold_time(hold_time: u64, total_time: u64) -> u64 {
     if (hold_time >= total_time) {
         return 0;
     }
@@ -21,8 +21,8 @@ fn get_boat_distance_travelled_with_hold_time(hold_time: u128, total_time: u128)
     distance_travelled
 }
 
-fn simulate_race_winning_conditions(race: &Race) -> Vec<u128> {
-    let mut valid_button_hold_times: Vec<u128> = Vec::new();
+fn simulate_race_winning_conditions(race: &Race) -> Vec<u64> {
+    let mut valid_button_hold_times: Vec<u64> = Vec::new();
 
     let mut current_button_hold_time = 1;
 
@@ -46,8 +46,8 @@ fn parse_input_part1(input: &str) -> Vec<Race> {
     let time_line = input.lines().nth(0).unwrap();
     let max_distance_line = input.lines().nth(1).unwrap();
 
-    let times = re.captures_iter(time_line).map(|cap| cap[1].parse::<u128>().unwrap());
-    let max_distances = re.captures_iter(max_distance_line).map(|cap| cap[1].parse::<u128>().unwrap());
+    let times = re.captures_iter(time_line).map(|cap| cap[1].parse::<u64>().unwrap());
+    let max_distances = re.captures_iter(max_distance_line).map(|cap| cap[1].parse::<u64>().unwrap());
 
     let mut races: Vec<Race> = Vec::new();
 
@@ -65,8 +65,8 @@ fn parse_input_part2(input: &str) -> Race {
     let time_str = time_line.split(":").nth(1).unwrap().split_whitespace().collect::<String>();
     let max_distance_str = max_distance_line.split(":").nth(1).unwrap().split_whitespace().collect::<String>();
 
-    let time = time_str.parse::<u128>().unwrap();
-    let max_distance = max_distance_str.parse::<u128>().unwrap();
+    let time = time_str.parse::<u64>().unwrap();
+    let max_distance = max_distance_str.parse::<u64>().unwrap();
 
     Race {
         time: time,
@@ -96,7 +96,7 @@ fn main() {
     let part2_race = parse_input_part2(input);
     let part2_lengths = simulate_race_winning_conditions(&part2_race);
 
-    let part2_sum: u128 = part2_lengths.len() as u128;
+    let part2_sum: u64 = part2_lengths.len() as u64;
 
     println!("Part 2: {}", part2_sum);
 }
