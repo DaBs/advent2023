@@ -43,17 +43,14 @@ impl CamelCardsHand {
         if jokers_wildcard && highest_hit_entry.is_some() {
             let highest_hit_entry = highest_hit_entry.unwrap();
             // Find the highest hit count and add the joker count to it
-            if *highest_hit_entry.0 != CamelCard('J') {
-                let joker_counter = cards.iter()
-                    .filter(|card| **card == CamelCard('J'))
-                    .count() as u32;
-                hit_counter
-                    .entry(*highest_hit_entry.0)
-                    .and_modify(|count| *count += joker_counter);
+            let joker_hit_count = hit_counter.get(&CamelCard('J')).unwrap_or(&0).clone();
 
-                // Remove the joker from the cards list
-                hit_counter.remove(&CamelCard('J'));
-            }
+            hit_counter
+                .entry(*highest_hit_entry.0)
+                .and_modify(|count| *count += joker_hit_count);
+
+            // Remove the joker from the cards list
+            hit_counter.remove(&CamelCard('J'));
         }
 
         CamelCardsHand {
