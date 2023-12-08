@@ -75,31 +75,12 @@ impl Map {
         }))
     }
 
-    fn traverse_from_to(&self, from_id: &str, to_id: &str) -> usize {
-        let mut distance = 0;
-        let mut current_id = from_id.to_string();
-
-        while current_id != to_id {
-            let node = self.nodes.iter().find(|node| node.id == current_id).unwrap();
-            let direction = self.directions[distance % self.directions.len()].clone();
-
-            match direction {
-                Direction::Left => current_id = node.left_id.clone(),
-                Direction::Right => current_id = node.right_id.clone()
-            }
-
-            distance += 1;
-        }
-
-        distance
-    }
-
     // Understanding of having to use LCM for this solution was not my own, but required very little modifications
     // and I learned something new.
-    fn simultaneously_traverse_from_all_to_all(&self, from_id_ending: char, to_id_ending: char) -> usize {
+    fn traverse_from_all_to_all(&self, from_id: &str, to_id: &str) -> Vec<usize> {
         let mut distances = Vec::new();
         let current_nodes = self.nodes.iter()
-            .filter(|node| node.id.ends_with(from_id_ending))
+            .filter(|node| node.id.ends_with(from_id))
             .cloned()
             .collect::<Vec<_>>();
 
@@ -107,7 +88,7 @@ impl Map {
             let mut current_node = node;
             let mut current_count = 0;
 
-            while !current_node.id.ends_with(to_id_ending) {
+            while !current_node.id.ends_with(to_id) {
                 let idx = current_count % self.directions.len();
                 let direction = self.directions[idx].clone();
 
@@ -128,6 +109,12 @@ impl Map {
             distances.push(current_count);
         }
 
+        distances
+    }
+
+    fn get_traversed_distance(&self, from_id: &str, to_id: &str) -> usize {
+        let distances = self.traverse_from_all_to_all(from_id, to_id);
+
         let distance = distances.into_iter().fold(1, |acc, distance| lcm(acc, distance));
 
         distance
@@ -137,7 +124,7 @@ impl Map {
 fn part1(input: &str) -> usize {
     let (input, map) = Map::parse(input).unwrap();
 
-    let distance = map.traverse_from_to("AAA", "ZZZ");
+    let distance = map.get_traversed_distance("AAA", "ZZZ");
 
     distance
 }
@@ -145,7 +132,7 @@ fn part1(input: &str) -> usize {
 fn part2(input: &str) -> usize {
     let (input, map) = Map::parse(input).unwrap();
 
-    let distance = map.simultaneously_traverse_from_all_to_all('A', 'Z');
+    let distance = map.get_traversed_distance("A", "Z");
 
     distance
 }
