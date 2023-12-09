@@ -50,7 +50,7 @@ impl ReadingHistory {
             .flat_map(|differences| differences.last())
             .sum();
 
-        println!("Predicted reading: {}", extrapolated_reading);
+        println!("Extrapolated reading: {}", extrapolated_reading);
 
         extrapolated_reading
     }
