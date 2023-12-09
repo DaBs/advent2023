@@ -118,7 +118,7 @@ mod tests {
 
         let (input, readings) = Readings::parse(input).unwrap();
 
-        let sum = readings.get_sum_of_all_predicted_readings();
+        let sum = readings.get_sum_of_all_predicted_readings(false);
 
         assert_eq!(sum, 114);
     }
@@ -128,7 +128,7 @@ mod tests {
         let input = include_str!("./example.txt");
         let readings = Readings::parse(input).unwrap().1;
 
-        let next_reading = readings.readings[0].get_next_predicted_reading();
+        let next_reading = readings.readings[0].get_next_predicted_reading(false);
 
         assert_eq!(next_reading, 18);
     }
