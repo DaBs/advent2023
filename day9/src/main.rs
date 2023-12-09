@@ -26,21 +26,18 @@ impl ReadingHistory {
     fn get_next_extrapolated_reading(&self, reverse: bool) -> i64 {
         let mut current_readings = self.initial_readings.clone();
 
-        // If we're to extrapolate a reading "from the past", i.e. add a "column" before the first reading, we just need to reverse the readings
         if reverse {
             current_readings.reverse();
         }
 
         println!("Initial readings: {:?}", current_readings);
 
-        let mut all_differences = Vec::new();
-        all_differences.push(current_readings.clone());
+        let mut all_differences = vec![current_readings.clone()];
 
         while !current_readings.iter().all(|&reading| reading == 0) {
-            let mut differences = Vec::new();
-            for i in 0..current_readings.len() - 1 {
-                differences.push(current_readings[i + 1] - current_readings[i]);
-            }
+            let differences = current_readings.windows(2)
+                .map(|window| window[1] - window[0])
+                .collect::<Vec<i64>>();
 
             println!("Differences: {:?}", differences);
 
