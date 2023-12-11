@@ -1,4 +1,4 @@
-use petgraph::graph::{NodeIndex, UnGraph};
+use petgraph::graph::{NodeIndex, Graph};
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 #[repr(u8)]
@@ -64,13 +64,13 @@ impl Pipes {
         }
     }
 
-    fn get_graph_map(&self) -> UnGraph<Pipe, ()> {
+    fn get_graph_map(&self) -> Graph<Pipe, ()> {
         // Depending on the pipe type, we need to add edges to a directed graph in different directions.
         // For example, a horizontal pipe will have edges to the left and right, but not up or down.
         // A north-east pipe will have edges to the north and east, but not south or west.
         // A starting pipe will have edges to the north, east, south, and west, if there are pipes connecting
         // in those directions.
-        let mut graph = UnGraph::<Pipe, ()>::new_undirected();
+        let mut graph = Graph::<Pipe, ()>::new();
 
         let mut node_indices = Vec::new();
 
@@ -195,8 +195,6 @@ impl Pipes {
 
             let node = &graph[node_index];
 
-            println!("Visiting node: {:?} from node {:?}", node, node_index);
-
             let mut neighbors = graph.neighbors(node_index).detach();
 
             while let Some(neighbor_index) = neighbors.next_node(&graph) {
@@ -206,16 +204,24 @@ impl Pipes {
             steps += 1;
         }
 
-        println!("Visited: {:?}", visited);
-        println!("Steps: {}", steps);
-
         visited
     }
 }
 
+fn part1() -> usize {
+    let input = include_str!("./input.txt");
+
+    let pipes = Pipes::parse(input);
+
+    let visited = pipes.traverse_pipes_to_find_loop();
+
+    visited.len() / 2
+}
 
 fn main() {
-    println!("Hello, world!");
+    let part1_answer = part1();
+
+    println!("Part 1 answer: {}", part1_answer);
 }
 
 #[cfg(test)]
@@ -240,5 +246,12 @@ mod tests {
         let visited = pipes.traverse_pipes_to_find_loop();
 
         assert_eq!(visited.len(), 16);
+    }
+
+    #[test]
+    fn test_part1() {
+        let part1_answer = part1();
+
+        assert_eq!(part1_answer, 6800);
     }
 }
