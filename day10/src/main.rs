@@ -182,8 +182,6 @@ impl Pipes {
         let mut queue = Vec::new();
         queue.push(starting_node_index);
 
-        let mut steps = 0;
-
         while !queue.is_empty() {
             let node_index = queue.remove(0);
 
@@ -193,15 +191,11 @@ impl Pipes {
 
             visited.push(node_index);
 
-            let node = &graph[node_index];
-
             let mut neighbors = graph.neighbors(node_index).detach();
 
             while let Some(neighbor_index) = neighbors.next_node(&graph) {
                 queue.push(neighbor_index);
             }
-
-            steps += 1;
         }
 
         visited
