@@ -12,25 +12,10 @@ impl SpringRecord {
         let groupings_str = line.split(" ").nth(1).expect("There to be groupings in the line").to_string();
 
         // There's gotta be a better way to do this, but it's like this for now until I clean it
-        let unfolded_springs = springs_str
-            .split("?")
-            .collect::<Vec<_>>()
-            .iter()
-            .cycle()
-            .take(unfold_factor * springs_str.split("?").count())
-            .cloned()
-            .collect::<Vec<_>>()
-            .join("?");
+        let unfolded_springs = (springs_str.to_owned() + &"?").repeat(5);
+        let unfolded_springs = unfolded_springs.chars().take(unfolded_springs.len() - 1).collect::<String>();
 
-        let unfolded_groupings = groupings_str
-            .split(",")
-            .collect::<Vec<_>>()
-            .iter()
-            .cycle()
-            .take(unfold_factor * groupings_str.split(",").count())
-            .cloned()
-            .collect::<Vec<_>>()
-            .join(",");
+        let unfolded_groupings = groupings_str.split(",").collect::<Vec<_>>().repeat(unfold_factor).join(",");
 
         let groupings = unfolded_groupings.split(",").map(|grouping| {
             grouping.parse::<usize>().unwrap()
