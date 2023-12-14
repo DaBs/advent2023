@@ -29,9 +29,6 @@ impl Map {
             self.tiles.as_rows()
         };
 
-        let mut reflection_index = 0;
-        let mut reflection_radius = 0;
-
         for (index, entry) in entries.iter().enumerate() {
             let entry_str = entry.iter().collect::<String>();
             let matching_column_index = entries.iter().skip(index + 1).position(|other_entry| {
@@ -43,8 +40,7 @@ impl Map {
                 Some(matching_column_index) => {
                     // Find the middle of the reflection
                     if matching_column_index == 0 {
-                        reflection_index = index;
-                        reflection_radius = 1;
+                        let reflection_index = index;
 
                         let mut left_pointer = index;
                         let mut right_pointer = index + 1;
@@ -57,25 +53,22 @@ impl Map {
                         }
             
                         while left_pointer_str == right_pointer_str {
-                            reflection_radius += 1;
             
                             left_pointer -= 1;
                             right_pointer += 1;
 
-                            if right_pointer >= entries.len() {
-                                return reflection_index + 1;
-                            }
-
-                            if left_pointer == 0 {
-                                if &entries[left_pointer] == &entries[right_pointer] {
-                                    return reflection_index + 1;
-                                } else {
-                                    return 0;
-                                }
-                            }
-
                             left_pointer_str = &entries[left_pointer];
                             right_pointer_str = &entries[right_pointer];
+
+                            if left_pointer_str != right_pointer_str {
+                                println!("{:?} != {:?}", left_pointer_str, right_pointer_str);
+                                println!("Vertical {}, reflect {} left pointer: {}, right_pointer {}", vertical, reflection_index, left_pointer, right_pointer);
+                                break;
+                            }
+
+                            if left_pointer == 0 || right_pointer == entries.len() - 1 {
+                                return reflection_index + 1;
+                            }
                         }
                     }
                 }
@@ -108,8 +101,8 @@ fn part1(input: &str) -> usize {
         let horizontal_reflection = map.get_reflection_dimension(false);
         let vertical_reflection = map.get_reflection_dimension(true);
 
-        if horizontal_reflection != 0 && vertical_reflection != 0 {
-            println!("Map {} is symmetrical", index);
+        if horizontal_reflection == 0 && vertical_reflection == 0 {
+            println!("Map {} is not symmetrical", index);
         }
 
         total_horizontal_reflections += horizontal_reflection;
@@ -163,5 +156,23 @@ mod tests {
         let result = part1(input);
 
         assert_eq!(result, 709);
+    }
+
+    #[test]
+    fn test_specific() {
+        let input = include_str!("./specific.txt");
+
+        let result = part1(input);
+
+        assert_eq!(result, 1300);
+    }
+
+    #[test]
+    fn test_part1() {
+        let input = include_str!("./input.txt");
+
+        let result = part1(input);
+
+        assert_eq!(result, 36041);
     }
 }
