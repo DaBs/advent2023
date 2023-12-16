@@ -213,22 +213,19 @@ fn part2(input: &str) -> usize {
         bottom_to_top_lasers,
         left_to_right_lasers,
         right_to_left_lasers,
-    ];
+    ].into_iter().flatten().collect::<Vec<_>>();
 
     // Find the biggest laser
-    let biggest_corner = all_lasers
+    let longest_laser_beam = all_lasers
         .iter()
-        .map(|lasers| {
-            lasers
-                .iter()
-                .map(|laser| run_laser(&map, *laser).len())
-                .max()
-                .unwrap()
+        .map(|laser| {
+            let visited = run_laser(&map, *laser);
+            visited.len()
         })
         .max()
         .unwrap();
 
-    biggest_corner
+    longest_laser_beam
 }
 
 fn main() {
@@ -288,5 +285,19 @@ mod tests {
         let input = include_str!("./example.txt");
 
         assert_eq!(part2(input), 51);
+    }
+
+    #[test]
+    fn test_part1() {
+        let input = include_str!("./input.txt");
+
+        assert_eq!(part1(input), 7111);
+    }
+
+    #[test]
+    fn test_part2() {
+        let input = include_str!("./input.txt");
+
+        assert_eq!(part2(input), 7831);
     }
 }
