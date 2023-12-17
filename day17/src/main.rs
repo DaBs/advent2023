@@ -103,8 +103,6 @@ fn get_path(map: &CityMap, start: (usize, usize), end: (usize, usize), minimum_s
 
     let mut heap = BinaryHeap::new();
 
-    let mut smallest_cost = usize::MAX;
-
     let directions = vec![
         Direction::Up,
         Direction::Right,
@@ -223,7 +221,7 @@ mod tests {
 
         let map = parse_input(input);
 
-        let path = get_path(&map, (0, 0), (map.width - 1, map.height - 1));
+        let path = get_path(&map, (0, 0), (map.width - 1, map.height - 1), 1, 3);
 
         assert_eq!(path, Some(102));
     }
