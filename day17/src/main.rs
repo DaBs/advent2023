@@ -98,7 +98,7 @@ fn parse_input(input: &str) -> CityMap {
     }
 }
 
-fn get_path(map: &CityMap, start: (usize, usize), end: (usize, usize)) -> Option<usize> {
+fn get_path(map: &CityMap, start: (usize, usize), end: (usize, usize), minimum_steps: usize, maximum_steps: usize) -> Option<usize> {
     let mut dist: HashMap<DistKey, usize> = HashMap::new();
 
     let mut heap = BinaryHeap::new();
@@ -177,7 +177,11 @@ fn get_path(map: &CityMap, start: (usize, usize), end: (usize, usize)) -> Option
                 position: next_position,
             };
 
-            if next.steps_direction > 3 || dist.get(&next.into()).is_some_and(|&c| c <= next.cost) {
+            if next.steps_direction > maximum_steps || dist.get(&next.into()).is_some_and(|&c| c <= next.cost) {
+                continue;
+            }
+
+            if next.direction != direction && steps_direction < minimum_steps {
                 continue;
             }
 
@@ -192,13 +196,21 @@ fn get_path(map: &CityMap, start: (usize, usize), end: (usize, usize)) -> Option
 fn part1(input: &str) -> usize {
     let map = parse_input(input);
 
-    get_path(&map, (0, 0), (map.width - 1, map.height - 1)).unwrap()
+    get_path(&map, (0, 0), (map.width - 1, map.height - 1), 1, 3).unwrap()
+}
+
+fn part2(input: &str) -> usize {
+    let map = parse_input(input);
+
+    get_path(&map, (0, 0), (map.width - 1, map.height - 1), 4, 10).unwrap()
 }
 
 fn main() {
     let input = include_str!("./input.txt");
 
     println!("Part 1: {}", part1(input));
+
+    println!("Part 2: {}", part2(input));
 }
 
 #[cfg(test)]
