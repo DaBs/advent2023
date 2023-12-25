@@ -82,6 +82,8 @@ struct Pulse {
     pulse_type: PulseType,
 }
 
+
+#[derive(Debug, PartialEq, Eq, Clone)]
 struct Circuit {
     modules: Vec<Module>,
 }
@@ -109,7 +111,7 @@ impl Circuit {
         Ok((input, Circuit { modules: mapped_modules }))
     }
 
-    fn resolve_broadcast(&mut self) -> (u32, u32) {
+    fn resolve_broadcast(&mut self, stop_at_id: Option<(&str, &PulseType)>) -> (u32, u32, bool) {
         let broadcaster = self.modules.iter().find(|m| m.module_type == ModuleType::Broadcaster).unwrap();
 
         let mut low_pulses_sent = 0;
@@ -169,28 +171,34 @@ impl Circuit {
             }
 
             if should_send_pulse {
-                let new_pulses: Vec<_> = receiving_module.outputs
-                    .clone()
-                    .iter()
-                    .map(|o| Pulse {
-                        from_id: receiving_module.id.clone(),
-                        to_id: o.clone(),
-                        pulse_type: outgoing_pulse_type.clone(),
-                    })
-                    .collect();
+                //println!("Sending pulse from {} to {}", pulse.from_id, pulse.to_id);
+                let mut pulse = Pulse {
+                    from_id: receiving_module.id.clone(),
+                    to_id: "".to_string(),
+                    pulse_type: outgoing_pulse_type.clone(),
+                };
 
-                if outgoing_pulse_type == PulseType::Low {
-                    low_pulses_sent += new_pulses.len() as u32;
-                } else {
-                    high_pulses_sent += new_pulses.len() as u32;
+                for output in &receiving_module.outputs {
+                    pulse.to_id = output.clone();
+
+                    if let Some((stop_at_id, stop_at_pulse_type)) = stop_at_id {
+                        if pulse.from_id == stop_at_id && pulse.pulse_type == *stop_at_pulse_type {
+                            return (low_pulses_sent, high_pulses_sent, true);
+                        }
+                    }
+
+                    match pulse.pulse_type {
+                        PulseType::Low => low_pulses_sent += 1,
+                        PulseType::High => high_pulses_sent += 1,
+                    }
+
+                    queue.push_back(pulse.clone());
                 }
-    
-                queue.extend(new_pulses);
             }
         }
 
         // Button always sends a low pulse to broadcaster
-        (low_pulses_sent + 1, high_pulses_sent)
+        (low_pulses_sent + 1, high_pulses_sent, false)
     }
 }
 
@@ -202,7 +210,7 @@ fn part1(input: &str) -> u32 {
     let mut high_pulses_sent = 0;
 
     for _ in 0..1000 {
-        let (low, high) = circuit.resolve_broadcast();
+        let (low, high, _) = circuit.resolve_broadcast(None);
 
         low_pulses_sent += low;
         high_pulses_sent += high;
@@ -211,10 +219,49 @@ fn part1(input: &str) -> u32 {
     low_pulses_sent * high_pulses_sent
 }
 
+fn part2(input: &str) -> u64 {
+    let (_, mut circuit) = Circuit::parse(input).unwrap();
+
+    // Only one
+    let modules_leading_to_rx = circuit.modules.iter().filter(|m| m.outputs.contains(&"rx".to_string())).collect::<Vec<_>>();
+
+    let input_ids_to_module_to_rx = modules_leading_to_rx[0].input_states.iter().map(|(k, _)| k).collect::<Vec<_>>();
+
+    let modules_to_check = circuit.modules
+        .iter()
+        .filter(|m| {
+            input_ids_to_module_to_rx.contains(&&m.id)
+        })
+        .collect::<Vec<_>>();
+
+    let cycles = modules_to_check
+        .iter()
+        .map(|m| {
+
+            let mut circuit = circuit.clone();
+
+            for button_press in 1..1000000 {
+                let (low, high, stopped_at_id) = circuit.resolve_broadcast(Some((&m.id, &PulseType::High)));
+
+                if stopped_at_id {
+                    return button_press;
+                }
+            }
+
+            panic!("No solution found for module {}", m.id);
+        });
+
+    let product = cycles.product();
+
+    product
+}
+
 fn main() {
     let input = include_str!("./input.txt");
 
     println!("Part 1: {}", part1(input));
+
+    println!("Part 2: {}", part2(input));
 }
 
 #[cfg(test)]
@@ -241,7 +288,7 @@ mod tests {
 
         let (_, mut circuit) = Circuit::parse(input).unwrap();
 
-        let (low_pulses_sent, high_pulses_sent) = circuit.resolve_broadcast();
+        let (low_pulses_sent, high_pulses_sent, _) = circuit.resolve_broadcast(None);
 
         assert_eq!(low_pulses_sent, 8);
         assert_eq!(high_pulses_sent, 4);
@@ -259,5 +306,12 @@ mod tests {
         let input = include_str!("./input.txt");
 
         assert_eq!(part1(input), 879834312);
+    }
+
+    #[test]
+    fn test_part2() {
+        let input = include_str!("./input.txt");
+
+        assert_eq!(part2(input), 243037165713371);
     }
 }
